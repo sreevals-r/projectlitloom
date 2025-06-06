@@ -1,6 +1,7 @@
 import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 
+
 # --- Main Application Class ---
 class LitLoomApp(tk.Tk):
     """
@@ -8,13 +9,14 @@ class LitLoomApp(tk.Tk):
     featuring a welcome screen with a button and navigation to a second page.
     This version is optimized to prevent lag on resize.
     """
+
     def __init__(self):
         super().__init__()
 
         # --- Window Configuration ---
         self.title("◆ LitLoom")
         self.geometry("800x600")
-        self.minsize(600, 450) # Set a minimum size
+        self.minsize(600, 450)  # Set a minimum size
 
         # --- Page State Management ---
         self.current_page = "welcome"
@@ -24,14 +26,14 @@ class LitLoomApp(tk.Tk):
 
         # --- Button Colors for Animation ---
         self.button_bg_color = "#A6876D"
-        self.button_hover_color = "#92755E" # A slightly darker shade for the hover effect
+        self.button_hover_color = "#92755E"  # A slightly darker shade for the hover effect
 
         # --- Image Loading ---
         self.original_fg_image = None
         self.original_bg_image = None
-        self.fg_photo = None # PhotoImage for the foreground
-        self.bg_photo = None # PhotoImage for the background
-        self.overlay_photo = None # PhotoImage for the transparent overlay
+        self.fg_photo = None  # PhotoImage for the foreground
+        self.bg_photo = None  # PhotoImage for the background
+        self.overlay_photo = None  # PhotoImage for the transparent overlay
 
         try:
             # Load the main image (person reading)
@@ -44,7 +46,7 @@ class LitLoomApp(tk.Tk):
             self.original_bg_image = Image.open("bg.jpeg")
         except FileNotFoundError:
             print("Error: 'bg.jpeg' (background image) not found.")
-        
+
         # --- Canvas Setup ---
         # The canvas will cover the entire window.
         self.canvas = tk.Canvas(self, highlightthickness=0)
@@ -57,7 +59,6 @@ class LitLoomApp(tk.Tk):
         self.canvas.tag_bind("button", "<Button-1>", self.go_to_next_page)
         self.canvas.tag_bind("button", "<Enter>", self.on_button_hover)
         self.canvas.tag_bind("button", "<Leave>", self.on_button_leave)
-
 
     def go_to_next_page(self, event=None):
         """Switches to the blank next page and redraws the screen."""
@@ -72,7 +73,6 @@ class LitLoomApp(tk.Tk):
         self.canvas.move("button", 2, 2)
         # Change the button background color to the darker hover shade
         self.canvas.itemconfig("button_bg", fill=self.button_hover_color)
-
 
     def on_button_leave(self, event=None):
         """Changes the cursor and reverts button animation on leave."""
@@ -91,7 +91,7 @@ class LitLoomApp(tk.Tk):
         # Apply the mask to the original image's alpha channel
         img.putalpha(mask)
         return img
-        
+
     def draw_rounded_rectangle(self, x1, y1, x2, y2, radius, **kwargs):
         """Draws a rounded rectangle on the canvas."""
         points = [
@@ -109,7 +109,7 @@ class LitLoomApp(tk.Tk):
         # If there's a pending redraw job, cancel it
         if self.resize_job_id:
             self.after_cancel(self.resize_job_id)
-        
+
         # Schedule the actual redraw to happen in 50 milliseconds
         self.resize_job_id = self.after(50, self.redraw_canvas)
 
@@ -119,12 +119,12 @@ class LitLoomApp(tk.Tk):
             self.draw_welcome_page()
         elif self.current_page == "next":
             self.draw_next_page()
-            
+
     def draw_background(self):
         """Draws the tiled background image for the welcome page."""
         win_width = self.winfo_width()
         win_height = self.winfo_height()
-        
+
         if self.original_bg_image:
             bg_img_resized = self.original_bg_image.resize((win_width, win_height), Image.Resampling.LANCZOS)
             self.bg_photo = ImageTk.PhotoImage(bg_img_resized)
@@ -133,19 +133,19 @@ class LitLoomApp(tk.Tk):
             self.canvas.configure(bg="#FDFDFD")
 
     def draw_next_page(self):
-        """Draws the blank second page with a white background."""
+        """Draws the blank second page with a custom background color."""
         self.canvas.delete("all")
-        # Set the background to white for this page
-        self.canvas.configure(bg="white")
+        # Set the background to the desired color for this page
+        self.canvas.configure(bg="#B48C68")
         # You can add content for the next page here if needed
         self.canvas.create_text(
             self.winfo_width() / 2,
             self.winfo_height() / 2,
             text="Welcome to the next page!",
             font=("Helvetica", 24, "bold"),
-            fill="#333333"
+            fill="white"  # Changed text to white for better contrast
         )
-        
+
     def draw_welcome_page(self):
         """Draws the initial welcome screen with image and button."""
         self.canvas.delete("all")
@@ -157,9 +157,10 @@ class LitLoomApp(tk.Tk):
 
         # --- 2. Draw Foreground Image ---
         if not self.original_fg_image:
-            self.canvas.create_text(win_width / 2, win_height / 2, text="Foreground image not found", font=("Arial", 14), fill="red")
+            self.canvas.create_text(win_width / 2, win_height / 2, text="Foreground image not found",
+                                    font=("Arial", 14), fill="red")
             return
-            
+
         fg_img_width = win_width * 0.8
         fg_img_height = win_height * 0.7
         fg_img = self.original_fg_image.copy()
@@ -177,7 +178,6 @@ class LitLoomApp(tk.Tk):
         self.overlay_photo = ImageTk.PhotoImage(overlay)
         self.canvas.create_image(win_width / 2, win_height / 2, image=self.overlay_photo)
 
-
         # --- 4. Draw the "Let's Go!" Button (ON TOP OF EVERYTHING ELSE) ---
         button_width = 200
         button_height = 50
@@ -187,18 +187,19 @@ class LitLoomApp(tk.Tk):
         btn_y1 = btn_center_y - button_height / 2
         btn_x2 = btn_x1 + button_width
         btn_y2 = btn_y1 + button_height
-        
+
         # Draw the button background shape using two tags for specific control
         self.draw_rounded_rectangle(
             btn_x1, btn_y1, btn_x2, btn_y2,
             radius=25, fill=self.button_bg_color, outline="", tags=("button", "button_bg")
         )
-        
+
         # Draw the button text
         self.canvas.create_text(
             btn_center_x, btn_center_y,
-            text="Let's Go!", font=("Helvetica", 16, "bold"), fill="white", tags="button" 
+            text="Let's Go!", font=("Helvetica", 16, "bold"), fill="white", tags="button"
         )
+
 
 # --- Running the Application ---
 if __name__ == "__main__":
